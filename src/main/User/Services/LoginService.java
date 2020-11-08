@@ -4,10 +4,12 @@ import Config.Message;
 import Config.Service;
 import Database.UserDao;
 import Security.SecurityUtils;
-import User.User;
+import User.*;
 import User.UserMessage;
 import Validation.ValidationUtils;
 import org.slf4j.Logger;
+
+import java.util.Optional;
 
 public class LoginService implements Service {
   private Logger logger;
@@ -29,9 +31,18 @@ public class LoginService implements Service {
       logger.info("Invalid username and/or password");
       return UserMessage.AUTH_FAILURE;
     }
-    // TODO: see UserMessage for appropriate return types
-    return null;
+    Optional<User> user = userDao.get(this.username);
+    if (user.isPresent()){
+      String hash = user.get().getPassword();
+      if (verifyPassword(this.password, hash)){
+        return UserMessage.SUCCESS;
+      } else{
+        return UserMessage.AUTH_FAILURE;
+      }
+    }
+    return UserMessage.USER_NOT_FOUND;
   }
+
 
   public boolean verifyPassword(String inputPassword, String userHash) {
     SecurityUtils.PassHashEnum verifyPasswordStatus =

@@ -40,5 +40,24 @@ public class LoginServiceUnitTests {
     assertEquals(message, UserMessage.USER_NOT_FOUND);
   }
 
-  // TODO: add more tests
+  @Test
+  public void wrongPassword() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", "password2");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+  }
+  @Test
+  public void validLogin() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", "password123");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.SUCCESS);
+  }
 }
