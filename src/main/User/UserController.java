@@ -45,7 +45,7 @@ public class UserController {
         String username = ctx.sessionAttribute("username");
         GetUserInfoService infoService = new GetUserInfoService(userDao, logger, username);
         Message message = infoService.executeAndGetResponse();
-        ctx.json(mergeJSON(infoService.getUserFields(), message.toJSON()).toString());
+        ctx.json(mergeJSON(message.toJSON(),infoService.getUserFields()).toString());
       };
 
   // helper function to merge 2 json objects
