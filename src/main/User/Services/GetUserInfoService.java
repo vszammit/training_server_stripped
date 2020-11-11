@@ -7,6 +7,8 @@ import User.User;
 import User.UserMessage;
 import Validation.ValidationUtils;
 import java.util.Objects;
+import java.util.Optional;
+
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
@@ -27,8 +29,18 @@ public class GetUserInfoService implements Service {
     if (!ValidationUtils.isValidUsername(this.username)) {
       return UserMessage.USER_NOT_FOUND;
     }
-    // TODO: return the appropriate response here
-    return null;
+    Objects.requireNonNull(userDao);
+    Objects.requireNonNull(username);
+    Objects.requireNonNull(logger);
+    Optional<User> user = userDao.get(username);
+    if (user.isPresent()) {
+      this.user = user.get();
+      logger.info("Successfully got user info");
+      return UserMessage.SUCCESS;
+    } else{
+      logger.error("Session Token Failure");
+      return UserMessage.USER_NOT_FOUND;
+    }
   }
 
   public JSONObject getUserFields() {

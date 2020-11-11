@@ -6,6 +6,7 @@ import Config.DeploymentLevel;
 import Database.UserDao;
 import Database.UserDaoFactory;
 import Logger.LogFactory;
+import TestUtils.EntityFactory;
 import User.Services.GetUserInfoService;
 import org.junit.After;
 import org.junit.Before;
@@ -33,5 +34,14 @@ public class GetUserInfoServiceUnitTests {
     assertEquals(getUserInfoService.executeAndGetResponse(), UserMessage.USER_NOT_FOUND);
   }
 
-  // TODO: add more tests
+  @Test
+  public void userFound() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    GetUserInfoService getUserInfoService = new GetUserInfoService(userDao, logger, "username1");
+    assertEquals(getUserInfoService.executeAndGetResponse(), UserMessage.SUCCESS);
+    assertEquals(getUserInfoService.getUserFields().getString("username"), "username1");
+  }
 }
