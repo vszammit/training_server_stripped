@@ -6,9 +6,11 @@ import Database.UserDao;
 import User.User;
 import User.UserMessage;
 import Validation.ValidationUtils;
-import java.util.Objects;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+
+import java.util.Objects;
+import java.util.Optional;
 
 public class GetUserInfoService implements Service {
   private UserDao userDao;
@@ -27,8 +29,12 @@ public class GetUserInfoService implements Service {
     if (!ValidationUtils.isValidUsername(this.username)) {
       return UserMessage.USER_NOT_FOUND;
     }
-    // TODO: return the appropriate response here
-    return null;
+    Optional<User> user = userDao.get(this.username);
+    if (user.isEmpty()) {
+      return UserMessage.USER_NOT_FOUND;
+    }
+    this.user = user.get();
+    return UserMessage.SUCCESS;
   }
 
   public JSONObject getUserFields() {
