@@ -8,6 +8,7 @@ import com.mongodb.client.MongoDatabase;
 import io.javalin.http.Handler;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import Config.Message;
 
 public class UserController {
   Logger logger;
@@ -28,7 +29,14 @@ public class UserController {
         String username = req.getString("username");
         String password = req.getString("password");
         LoginService loginService = new LoginService(userDao, logger, username, password);
+          logger.info("Attempting to login " + username);
         // implement the rest here
+          Message response = loginService.executeAndGetResponse();
+          if (response == UserMessage.AUTH_SUCCESS) {
+              ctx.sessionAttribute("username", username);
+          }
+          logger.info(response.toString() + response.getErrorDescription());
+          ctx.result(response.toResponseString());
       };
 
   public Handler logout =
@@ -44,6 +52,13 @@ public class UserController {
         String username = ctx.sessionAttribute("username");
         GetUserInfoService infoService = new GetUserInfoService(userDao, logger, username);
         // implement the rest here
+          Message response = infoService.executeAndGetResponse();
+          if (response == UserMessage.AUTH_SUCCESS){
+              JSONObject info = infoService.getUserFields();
+              info.put("status", UserMessage.SUCCESS.getErrorName());
+              info.put("message", UserMessage.SUCCESS.getErrorDescription());
+          }
+          ctx.result(response.toResponseString());
       };
 
   // helper function to merge 2 json objects
