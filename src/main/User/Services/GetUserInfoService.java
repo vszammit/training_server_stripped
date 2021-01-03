@@ -31,6 +31,7 @@ public class GetUserInfoService implements Service {
     return null;
   }
 
+  //what does this do?
   public JSONObject getUserFields() {
     Objects.requireNonNull(user);
     JSONObject userObject = new JSONObject();

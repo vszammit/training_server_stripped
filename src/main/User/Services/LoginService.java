@@ -29,8 +29,15 @@ public class LoginService implements Service {
       logger.info("Invalid username and/or password");
       return UserMessage.AUTH_FAILURE;
     }
+    //you included a USERNOTFOUND error in the tests, should I break this apart?
     // TODO: see UserMessage for appropriate return types
-    return null;
+    //swapped null with auth success
+    if (verifyPassword(this.password, this.username)){
+      return UserMessage.AUTH_SUCCESS;
+    }
+    //wait so does verify password show that the password is legit (like not too long)
+    //or does it show that the password is correct for the username
+    return UserMessage.AUTH_FAILURE;
   }
 
   public boolean verifyPassword(String inputPassword, String userHash) {

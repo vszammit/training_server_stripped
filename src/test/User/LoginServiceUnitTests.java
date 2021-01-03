@@ -40,5 +40,61 @@ public class LoginServiceUnitTests {
     assertEquals(message, UserMessage.USER_NOT_FOUND);
   }
 
+  @Test
+  public void caseSensitive() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password1")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "Username1", "password1");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.USER_NOT_FOUND);
+  }
+
+  @Test
+  public void wrongPassword() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password1")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", "password2");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+  }
+
+  @Test
+  public void shouldWorkFine() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password1")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", "password1");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_SUCCESS);
+
+    //this does not work. either I must have a bug or the verifyPassword works differently than I expect.
+  }
+
+  @Test
+  public void extraSpace() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password1")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", "password1 ");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+  }
+
+  @Test
+  public void swapped() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password1")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "password1", "username1");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+  }
   // TODO: add more tests
 }

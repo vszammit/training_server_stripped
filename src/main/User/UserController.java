@@ -29,6 +29,11 @@ public class UserController {
         String password = req.getString("password");
         LoginService loginService = new LoginService(userDao, logger, username, password);
         // implement the rest here
+        if (loginService.verifyPassword(password, username)) {
+            ctx.sessionAttribute("username", username);
+        }
+        ctx.result(loginService.executeAndGetResponse().toResponseString());
+        // is that it?
       };
 
   public Handler logout =
@@ -44,6 +49,14 @@ public class UserController {
         String username = ctx.sessionAttribute("username");
         GetUserInfoService infoService = new GetUserInfoService(userDao, logger, username);
         // implement the rest here
+        JSONObject req = infoService.getUserFields();
+        JSONObject output = mergeJSON({"status":ERROR}, req);
+        //that clearly doesn't work.
+        ctx.result(output);
+        /*wait so here is the ctx body supposed to provide everything? also, what is a error,
+          I don't see a list of errors like for the login service. Also, why is there no password
+          mentioned in the code yet? are we getting the info from ctx? or something else?
+         */
       };
 
   // helper function to merge 2 json objects
