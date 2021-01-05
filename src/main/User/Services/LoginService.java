@@ -9,6 +9,8 @@ import User.UserMessage;
 import Validation.ValidationUtils;
 import org.slf4j.Logger;
 
+import java.util.Optional;
+
 public class LoginService implements Service {
   private Logger logger;
   private UserDao userDao;
@@ -29,15 +31,21 @@ public class LoginService implements Service {
       logger.info("Invalid username and/or password");
       return UserMessage.AUTH_FAILURE;
     }
-    //you included a USERNOTFOUND error in the tests, should I break this apart?
     // TODO: see UserMessage for appropriate return types
-    //swapped null with auth success
-    if (verifyPassword(this.password, this.username)){
+    Optional<User> ou = userDao.get(this.username);
+    if(ou.isEmpty()){
+      logger.info("User does not exist");
+      return UserMessage.USER_NOT_FOUND;
+    }
+    this.user = ou.get();
+    if (verifyPassword(this.password, user.getPassword())){
+      logger.info("Successful login");
       return UserMessage.AUTH_SUCCESS;
     }
-    //wait so does verify password show that the password is legit (like not too long)
-    //or does it show that the password is correct for the username
-    return UserMessage.AUTH_FAILURE;
+    else {
+      logger.info("incorrect password");
+      return UserMessage.AUTH_FAILURE;
+    }
   }
 
   public boolean verifyPassword(String inputPassword, String userHash) {

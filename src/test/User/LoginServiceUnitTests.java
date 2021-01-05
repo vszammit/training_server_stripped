@@ -48,7 +48,7 @@ public class LoginServiceUnitTests {
             .buildAndPersist(userDao);
     LoginService loginService = new LoginService(userDao, logger, "Username1", "password1");
     Message message = loginService.executeAndGetResponse();
-    assertEquals(message, UserMessage.USER_NOT_FOUND);
+    assertEquals(message, UserMessage.AUTH_FAILURE);
   }
 
   @Test
@@ -71,8 +71,6 @@ public class LoginServiceUnitTests {
     LoginService loginService = new LoginService(userDao, logger, "username1", "password1");
     Message message = loginService.executeAndGetResponse();
     assertEquals(message, UserMessage.AUTH_SUCCESS);
-
-    //this does not work. either I must have a bug or the verifyPassword works differently than I expect.
   }
 
   @Test

@@ -1,5 +1,6 @@
 package User;
 
+import Config.Message;
 import Database.UserDao;
 import Logger.LogFactory;
 import User.Services.GetUserInfoService;
@@ -8,6 +9,8 @@ import com.mongodb.client.MongoDatabase;
 import io.javalin.http.Handler;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+
+import java.util.Optional;
 
 public class UserController {
   Logger logger;
@@ -29,11 +32,12 @@ public class UserController {
         String password = req.getString("password");
         LoginService loginService = new LoginService(userDao, logger, username, password);
         // implement the rest here
-        if (loginService.verifyPassword(password, username)) {
+        logger.info("logging in " + username);
+        Message output = loginService.executeAndGetResponse();
+        if (output == UserMessage.AUTH_SUCCESS) {
             ctx.sessionAttribute("username", username);
         }
-        ctx.result(loginService.executeAndGetResponse().toResponseString());
-        // is that it?
+        ctx.result(output.toResponseString());
       };
 
   public Handler logout =
@@ -49,14 +53,16 @@ public class UserController {
         String username = ctx.sessionAttribute("username");
         GetUserInfoService infoService = new GetUserInfoService(userDao, logger, username);
         // implement the rest here
-        JSONObject req = infoService.getUserFields();
-        JSONObject output = mergeJSON({"status":ERROR}, req);
-        //that clearly doesn't work.
-        ctx.result(output);
-        /*wait so here is the ctx body supposed to provide everything? also, what is a error,
-          I don't see a list of errors like for the login service. Also, why is there no password
-          mentioned in the code yet? are we getting the info from ctx? or something else?
-         */
+        logger.info("authenticating...");
+        Message loginResponse = infoService.executeAndGetResponse();
+        JSONObject output = new JSONObject();
+        if (loginResponse == UserMessage.AUTH_SUCCESS){
+            output = infoService.getUserFields();
+        }
+        logger.info("found user: getting info");
+        output.put("message", loginResponse.getErrorDescription());
+        output.put("status", loginResponse.getErrorName());
+        ctx.result(output.toString());
       };
 
   // helper function to merge 2 json objects

@@ -49,4 +49,17 @@ public class UserControllerIntTests {
   }
 
   // TODO: add more tests
+
+  /* to add once I get the other test to work
+
+  public void login_success(){
+  }
+
+  public void getUserInfoFailure(){
+  }
+
+  public void getUserInfoSuccess(){
+  }
+
+   */
 }
