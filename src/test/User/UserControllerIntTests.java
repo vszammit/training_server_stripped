@@ -122,4 +122,46 @@ public class UserControllerIntTests {
 
   // GET USER INFO INTEGRATION TESTS
 
+  @Test
+  public void validUserInfo() {
+    String username = "username";
+    String password = "password";
+    String firstName = "name";
+    EntityFactory.createUser()
+        .withUsername(username)
+        .withPasswordToHash(password)
+        .withFirstName(firstName)
+        .buildAndPersist(userDao);
+
+    JSONObject body = new JSONObject();
+    body.put("username", username);
+    body.put("password", password);
+    HttpResponse<String> loginResponse =
+        Unirest.post(TestUtils.getServerUrl() + "/login").body(body.toString()).asString();
+    JSONObject loginResp = TestUtils.responseStringToJSON(loginResponse.getBody());
+
+    HttpResponse<String> infoResponse =
+        Unirest.post(TestUtils.getServerUrl() + "/get-user-info").asString();
+    JSONObject infoResponseJSON = TestUtils.responseStringToJSON(infoResponse.getBody());
+
+    assertThat(loginResp.getString("status")).isEqualTo("AUTH_SUCCESS");
+    assertThat(infoResponseJSON.getString("username")).isEqualTo(username);
+    assertThat(infoResponseJSON.getString("firstName")).isEqualTo(firstName);
+  }
+
+  @Test
+  public void userInfoFailedLogin() {
+    String username = "username";
+    String password = "password";
+    EntityFactory.createUser()
+        .withUsername(username)
+        .withPasswordToHash(password)
+        .buildAndPersist(userDao);
+    JSONObject body = new JSONObject();
+    body.put("username", "fake");
+    HttpResponse<String> getInfoResponse =
+        Unirest.post(TestUtils.getServerUrl() + "/get-user-info").body(body.toString()).asString();
+    JSONObject loginResponseJSON = TestUtils.responseStringToJSON(getInfoResponse.getBody());
+    assertThat(loginResponseJSON.getString("status")).isEqualTo("ERROR");
+  }
 }
