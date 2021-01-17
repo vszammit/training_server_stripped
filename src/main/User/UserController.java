@@ -1,5 +1,6 @@
 package User;
 
+import Config.Message;
 import Database.UserDao;
 import Logger.LogFactory;
 import User.Services.GetUserInfoService;
@@ -24,11 +25,22 @@ public class UserController {
   public Handler loginUser =
       ctx -> {
         ctx.req.getSession().invalidate();
-        JSONObject req = new JSONObject(ctx.body());
-        String username = req.getString("username");
-        String password = req.getString("password");
+        String body = ctx.body();
+        if (body == null || body.isEmpty()) {
+          ctx.result(UserMessage.AUTH_FAILURE.toResponseString());
+          return;
+        }
+        JSONObject req = new JSONObject(body);
+        String username = req.has("username") ? req.getString("username") : null;
+        String password = req.has("password") ? req.getString("password") : null;
         LoginService loginService = new LoginService(userDao, logger, username, password);
-        // implement the rest here
+        Message response = loginService.executeAndGetResponse();
+
+        if (response == UserMessage.AUTH_SUCCESS) {
+          ctx.sessionAttribute("username", username);
+        }
+
+        ctx.result(response.toResponseString());
       };
 
   public Handler logout =
@@ -43,7 +55,16 @@ public class UserController {
         logger.info("Started getUserInfo handler");
         String username = ctx.sessionAttribute("username");
         GetUserInfoService infoService = new GetUserInfoService(userDao, logger, username);
-        // implement the rest here
+
+        Message response = infoService.executeAndGetResponse();
+
+        JSONObject responseBody = response.toJSON();
+        if (response == UserMessage.SUCCESS) {
+          JSONObject user = infoService.getUserFields();
+          responseBody = mergeJSON(responseBody, user);
+        }
+
+        ctx.result(responseBody.toString());
       };
 
   // helper function to merge 2 json objects

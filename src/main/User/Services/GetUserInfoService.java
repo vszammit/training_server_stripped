@@ -7,6 +7,8 @@ import User.User;
 import User.UserMessage;
 import Validation.ValidationUtils;
 import java.util.Objects;
+import java.util.Optional;
+
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
@@ -27,11 +29,28 @@ public class GetUserInfoService implements Service {
     if (!ValidationUtils.isValidUsername(this.username)) {
       return UserMessage.USER_NOT_FOUND;
     }
-    // TODO: return the appropriate response here
-    return null;
+
+    Optional<User> user = userDao.get(username);
+
+    // Indicates username does not exist in db
+    if (user.isEmpty()) {
+      return UserMessage.USER_NOT_FOUND;
+    }
+
+    this.user = user.get();
+    return UserMessage.SUCCESS;
   }
 
   public JSONObject getUserFields() {
+    return getFieldsFromUser(this.user);
+  }
+
+  /**
+   * Generate JSONObject with publicly-accessible User fields.
+   * @param user The User instance containing the data with which the JSONObject is populated
+   * @return The JSONObject representation of the passed User, which can be safely sent to client
+   */
+  public static JSONObject getFieldsFromUser(User user) {
     Objects.requireNonNull(user);
     JSONObject userObject = new JSONObject();
     userObject.put("organization", user.getOrganization());
