@@ -37,8 +37,41 @@ public class LoginServiceUnitTests {
         .buildAndPersist(userDao);
     LoginService loginService = new LoginService(userDao, logger, "username2", "password2");
     Message message = loginService.executeAndGetResponse();
-    assertEquals(message, UserMessage.USER_NOT_FOUND);
+    assertEquals(UserMessage.USER_NOT_FOUND, message);
   }
 
   // TODO: add more tests
+
+  @Test
+  public void userFoundRightPassword() {
+    EntityFactory.createUser().withUsername("username1").withPasswordToHash("abcefghijk").buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", "abcefghijk");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(UserMessage.SUCCESS, message);
+  }
+
+  @Test
+  public void userFoundWrongPassword() {
+    EntityFactory.createUser().withUsername("username1").withPasswordToHash("abc").buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", "123");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(UserMessage.AUTH_FAILURE, message);
+  }
+
+  @Test
+  public void emptyUser() {
+    EntityFactory.createUser().withUsername("username1").withPasswordToHash("abc").buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "", "abc");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(UserMessage.INVALID_PARAMETER, message);
+  }
+
+  @Test
+  public void emptyPassword() {
+    EntityFactory.createUser().withUsername("username1").withPasswordToHash("abc").buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "blah", "");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(UserMessage.INVALID_PARAMETER, message);
+  }
+
 }
