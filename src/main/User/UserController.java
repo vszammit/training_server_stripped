@@ -1,10 +1,12 @@
 package User;
 
+import Config.Message;
 import Database.UserDao;
 import Logger.LogFactory;
 import User.Services.GetUserInfoService;
 import User.Services.LoginService;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.util.JSON;
 import io.javalin.http.Handler;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -28,7 +30,11 @@ public class UserController {
         String username = req.getString("username");
         String password = req.getString("password");
         LoginService loginService = new LoginService(userDao, logger, username, password);
-        // implement the rest here
+        Message loginRes = loginService.executeAndGetResponse();
+        if (loginRes == UserMessage.AUTH_SUCCESS) {
+            ctx.sessionAttribute("username", username);
+        }
+        ctx.result(loginRes.toResponseString());
       };
 
   public Handler logout =
@@ -41,9 +47,24 @@ public class UserController {
   public Handler getUserInfo =
       ctx -> {
         logger.info("Started getUserInfo handler");
-        String username = ctx.sessionAttribute("username");
-        GetUserInfoService infoService = new GetUserInfoService(userDao, logger, username);
-        // implement the rest here
+        String cookieUsername = ctx.sessionAttribute("username");
+        JSONObject req = new JSONObject(ctx.body());
+        String username = req.getString("username");
+        if (!cookieUsername.equals(username))  {
+            ctx.result(UserMessage.USER_NOT_FOUND.toJSON().toString());
+        }
+        else {
+            GetUserInfoService infoService = new GetUserInfoService(userDao, logger, username);
+            Message message = infoService.executeAndGetResponse();
+            JSONObject jsonMessage = message.toJSON();
+            if (UserMessage.SUCCESS != message) {
+                ctx.result(jsonMessage.toString());
+            } else {
+                JSONObject info = infoService.getUserFields();
+                jsonMessage = mergeJSON(jsonMessage, info);
+                ctx.result(jsonMessage.toString());
+            }
+        }
       };
 
   // helper function to merge 2 json objects

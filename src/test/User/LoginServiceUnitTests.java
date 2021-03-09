@@ -40,5 +40,91 @@ public class LoginServiceUnitTests {
     assertEquals(message, UserMessage.USER_NOT_FOUND);
   }
 
-  // TODO: add more tests
+  @Test
+  public void successfulLogin() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", "password123");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_SUCCESS);
+  }
+
+  @Test
+  public void wrongPassword() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", "password1");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+  }
+
+  @Test
+  public void nullUsername() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, null, "password123");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+  }
+
+  @Test
+  public void blankUsername() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "  ", "password123");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+  }
+
+  @Test
+  public void invalidUsername() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1$", "password123");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+  }
+
+  @Test
+  public void nullPassword() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", null);
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+  }
+
+  @Test
+  public void blankPassword() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", "  ");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+  }
+
+  @Test
+  public void invalidPassword() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", "pass");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+  }
 }
