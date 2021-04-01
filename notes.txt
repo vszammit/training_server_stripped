@@ -1,0 +1,10 @@
+Where is the entry point of our app (aka our public static void main method)?
+	- App.java
+What is a Controller (hint look under User)?
+	- controls user signin and logouts, passes the authentication usernames and password to services
+What is a Service (hint look under User)?
+	- the logic for verifying a user's login and creating the user object
+What is a Dao? What functions does it have?
+	- DAO is the data access object, its main responsibility is to get data and its functions consist of setters and getters
+What does loadDao() do?
+	- load the database with a single user when we start

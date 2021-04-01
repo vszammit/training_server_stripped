@@ -1,5 +1,6 @@
 package User;
 
+import Config.Message;
 import Database.UserDao;
 import Logger.LogFactory;
 import User.Services.GetUserInfoService;
@@ -28,7 +29,14 @@ public class UserController {
         String username = req.getString("username");
         String password = req.getString("password");
         LoginService loginService = new LoginService(userDao, logger, username, password);
+
         // implement the rest here
+        Message response = loginService.executeAndGetResponse();
+        if (response == UserMessage.AUTH_SUCCESS)
+        {
+          ctx.sessionAttribute("username", username);
+        }
+        ctx.result(response.toResponseString());
       };
 
   public Handler logout =
