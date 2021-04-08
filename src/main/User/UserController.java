@@ -51,7 +51,26 @@ public class UserController {
         logger.info("Started getUserInfo handler");
         String username = ctx.sessionAttribute("username");
         GetUserInfoService infoService = new GetUserInfoService(userDao, logger, username);
+
         // implement the rest here
+        Message response = infoService.executeAndGetResponse();
+
+        JSONObject additionalInfo = new JSONObject();
+        additionalInfo.put("status", response.getErrorName());
+        additionalInfo.put("message", response.getErrorDescription());
+
+        if (response == UserMessage.SUCCESS)
+        {
+            JSONObject userFieldsObject = infoService.getUserFields();
+            JSONObject finalObject = mergeJSON(additionalInfo, userFieldsObject);
+
+            ctx.sessionAttribute("username", username);
+            ctx.result(finalObject.toString());
+        }
+        else
+        {
+            ctx.result(additionalInfo.toString());
+        }
       };
 
   // helper function to merge 2 json objects

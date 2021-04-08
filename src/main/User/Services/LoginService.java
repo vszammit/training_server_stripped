@@ -41,9 +41,9 @@ public class LoginService implements Service {
       return UserMessage.USER_NOT_FOUND;
     }
 
-    User dbUser = currUser.get();
+    this.user = currUser.get();
 
-    if (!verifyPassword(this.password, dbUser.getPassword()))
+    if (!verifyPassword(this.password, this.user.getPassword()))
     {
       // authentication failed
       return UserMessage.AUTH_FAILURE;
