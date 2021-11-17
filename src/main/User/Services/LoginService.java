@@ -9,6 +9,8 @@ import User.UserMessage;
 import Validation.ValidationUtils;
 import org.slf4j.Logger;
 
+import java.util.Optional;
+
 public class LoginService implements Service {
   private Logger logger;
   private UserDao userDao;
@@ -30,7 +32,17 @@ public class LoginService implements Service {
       return UserMessage.AUTH_FAILURE;
     }
     // TODO: see UserMessage for appropriate return types
-    return null;
+    Optional<User> potentialUser = userDao.get(this.username);
+    if (potentialUser.isEmpty()) {
+      logger.info("Nonexistent user");
+      return UserMessage.USER_NOT_FOUND;
+    }
+    User user = potentialUser.get();
+    if (!verifyPassword(this.password, user.getPassword())) {
+      return UserMessage.AUTH_FAILURE;
+    }
+    this.user = user;
+    return UserMessage.AUTH_SUCCESS;
   }
 
   public boolean verifyPassword(String inputPassword, String userHash) {
