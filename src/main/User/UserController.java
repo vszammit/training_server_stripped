@@ -1,10 +1,12 @@
 package User;
 
+import Config.Message;
 import Database.UserDao;
 import Logger.LogFactory;
 import User.Services.GetUserInfoService;
 import User.Services.LoginService;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.util.JSON;
 import io.javalin.http.Handler;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -29,6 +31,11 @@ public class UserController {
         String password = req.getString("password");
         LoginService loginService = new LoginService(userDao, logger, username, password);
         // implement the rest here
+          Message message = loginService.executeAndGetResponse();
+          if (message == UserMessage.AUTH_SUCCESS) {
+              ctx.sessionAttribute("username", username);
+          }
+          ctx.result(message.toResponseString());
       };
 
   public Handler logout =
@@ -44,6 +51,17 @@ public class UserController {
         String username = ctx.sessionAttribute("username");
         GetUserInfoService infoService = new GetUserInfoService(userDao, logger, username);
         // implement the rest here
+          Message message = infoService.executeAndGetResponse();
+          JSONObject statusMessage = message.toJSON();
+          if (message == UserMessage.SUCCESS) {
+              logger.info("User info found");
+              JSONObject userFields = infoService.getUserFields();
+              JSONObject mergedJSON = mergeJSON(statusMessage, userFields);
+              ctx.result(mergedJSON.toString());
+          } else {
+              logger.info("User info not found");
+              ctx.result(statusMessage.toString());
+          }
       };
 
   // helper function to merge 2 json objects

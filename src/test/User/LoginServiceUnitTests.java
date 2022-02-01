@@ -41,4 +41,66 @@ public class LoginServiceUnitTests {
   }
 
   // TODO: add more tests
+  @Test
+  public void userFound() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger, "username1", "password123");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_SUCCESS);
+  }
+
+  @Test
+  public void incorrectPassword() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger,"username1" , "password345");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+
+  }
+
+  @Test
+  public void nullUserInput() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+
+    LoginService loginService = new LoginService(userDao, logger,"" , "");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+
+  }
+
+  @Test
+  public void nullUsername() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger,"" , "password123");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+
+  }
+
+  @Test
+  public void nullPassword() {
+    EntityFactory.createUser()
+            .withUsername("username1")
+            .withPasswordToHash("password123")
+            .buildAndPersist(userDao);
+    LoginService loginService = new LoginService(userDao, logger,"username1" , "");
+    Message message = loginService.executeAndGetResponse();
+    assertEquals(message, UserMessage.AUTH_FAILURE);
+
+  }
+
+
+
 }
