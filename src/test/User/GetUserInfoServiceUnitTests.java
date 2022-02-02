@@ -3,10 +3,13 @@ package User;
 import static org.junit.Assert.assertEquals;
 
 import Config.DeploymentLevel;
+import Config.Message;
 import Database.UserDao;
 import Database.UserDaoFactory;
 import Logger.LogFactory;
+import TestUtils.EntityFactory;
 import User.Services.GetUserInfoService;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,4 +37,32 @@ public class GetUserInfoServiceUnitTests {
   }
 
   // TODO: add more tests
+  @Test
+  public void userEmpty() {
+      EntityFactory.createUser().buildAndPersist(userDao);
+      GetUserInfoService getUserInfoService = new GetUserInfoService(userDao, logger, "Taha");
+      assertEquals(UserMessage.USER_NOT_FOUND, getUserInfoService.executeAndGetResponse());
+  }
+
+  @Test
+  public void userFound() {
+      EntityFactory.createUser().withUsername("Taha").withPasswordToHash("boty").buildAndPersist(userDao);
+      GetUserInfoService getUserInfoService = new GetUserInfoService(userDao, logger, "Taha");
+      assertEquals(UserMessage.SUCCESS, getUserInfoService.executeAndGetResponse());
+  }
+
+    @Test
+    public void userGetDetails() {
+      String username = "tbot";
+      String firstName = "Taha";
+      String email = "taha@gmail";
+        EntityFactory.createUser().withUsername(username).withFirstName(firstName).withPasswordToHash("Password").
+                withEmail(email).buildAndPersist(userDao);
+        GetUserInfoService getUserInfoService = new GetUserInfoService(userDao, logger, "tbot");
+        Message response = getUserInfoService.executeAndGetResponse();
+        JSONObject user = getUserInfoService.getUserFields();
+        assertEquals(email, user.getString("email"));
+        assertEquals(username, user.getString("username"));
+        assertEquals(firstName, user.getString("firstName"));
+    }
 }

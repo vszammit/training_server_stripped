@@ -49,4 +49,109 @@ public class UserControllerIntTests {
   }
 
   // TODO: add more tests
+  @Test
+  public void userDoesNotExist() {
+      String username = "username1";
+      String password = "password1234";
+      String incorrectUsername = "username";
+      EntityFactory.createUser()
+              .withUsername(username)
+              .withPasswordToHash(password)
+              .buildAndPersist(userDao);
+
+      JSONObject body = new JSONObject();
+      body.put("username", incorrectUsername);
+      body.put("password", password);
+      HttpResponse<String> loginResponse =
+              Unirest.post(TestUtils.getServerUrl() + "/login").body(body.toString()).asString();
+      JSONObject loginResponseJSON = TestUtils.responseStringToJSON(loginResponse.getBody());
+      assertThat(loginResponseJSON.getString("status")).isEqualTo("USER_NOT_FOUND");
+  }
+
+    @Test
+    public void invalidPassword() {
+        String username = "username1";
+        String password = "password1234";
+        String invalidPassword = "badPassword123";
+        EntityFactory.createUser()
+                .withUsername(username)
+                .withPasswordToHash(password)
+                .buildAndPersist(userDao);
+
+        JSONObject body = new JSONObject();
+        body.put("username", username);
+        body.put("password", invalidPassword);
+        HttpResponse<String> loginResponse =
+                Unirest.post(TestUtils.getServerUrl() + "/login").body(body.toString()).asString();
+        JSONObject loginResponseJSON = TestUtils.responseStringToJSON(loginResponse.getBody());
+        assertThat(loginResponseJSON.getString("status")).isEqualTo("AUTH_FAILURE");
+    }
+
+    @Test
+    public void userSuccessfullyAuthenticated() {
+        String username = "username1";
+        String password = "password1234";
+        EntityFactory.createUser()
+                .withUsername(username)
+                .withPasswordToHash(password)
+                .buildAndPersist(userDao);
+
+        JSONObject body = new JSONObject();
+        body.put("username", username);
+        body.put("password", password);
+
+        HttpResponse<String> loginResponse =
+                Unirest.post(TestUtils.getServerUrl() + "/login").body(body.toString()).asString();
+        JSONObject loginResponseJSON = TestUtils.responseStringToJSON(loginResponse.getBody());
+        assertThat(loginResponseJSON.getString("status")).isEqualTo("AUTH_SUCCESS");
+    }
+
+    @Test
+    public void usernameEmpty() {
+        String username = "username1";
+        String password = "password1234";
+        EntityFactory.createUser()
+                .withUsername(username)
+                .withPasswordToHash(password)
+                .buildAndPersist(userDao);
+
+        JSONObject body = new JSONObject();
+        body.put("username", "");
+        body.put("password", password);
+
+        HttpResponse<String> loginResponse =
+                Unirest.post(TestUtils.getServerUrl() + "/login").body(body.toString()).asString();
+        JSONObject loginResponseJSON = TestUtils.responseStringToJSON(loginResponse.getBody());
+        assertThat(loginResponseJSON.getString("status")).isEqualTo("AUTH_FAILURE");
+    }
+
+    @Test
+    public void userGetEmail() {
+        String username = "username1";
+        String password = "password1234";
+        String email = "taha@gmail";
+        String firstName = "taha";
+        EntityFactory.createUser()
+                .withUsername(username)
+                .withFirstName(firstName)
+                .withPasswordToHash(password)
+                .withEmail(email)
+                .buildAndPersist(userDao);
+
+        JSONObject body = new JSONObject();
+        body.put("username", username);
+        body.put("password", password);
+
+        HttpResponse<String> loginResponse =
+                Unirest.post(TestUtils.getServerUrl() + "/login").body(body.toString()).asString();
+        JSONObject loginResponseJSON = TestUtils.responseStringToJSON(loginResponse.getBody());
+
+        HttpResponse<String> infoServiceResponse =
+                Unirest.post(TestUtils.getServerUrl() + "/get-user-info").body(body.toString()).asString();
+        JSONObject infoServiceResponseJSON = TestUtils.responseStringToJSON(infoServiceResponse.getBody());
+
+        assertThat(infoServiceResponseJSON.getString("email")).isEqualTo(email);
+        assertThat(infoServiceResponseJSON.getString("firstName")).isEqualTo(firstName);
+
+    }
 }

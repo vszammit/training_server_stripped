@@ -7,6 +7,8 @@ import User.User;
 import User.UserMessage;
 import Validation.ValidationUtils;
 import java.util.Objects;
+import java.util.Optional;
+
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
@@ -25,10 +27,14 @@ public class GetUserInfoService implements Service {
   @Override
   public Message executeAndGetResponse() {
     if (!ValidationUtils.isValidUsername(this.username)) {
+      return UserMessage.INVALID_PARAMETER;
+    }
+    Optional<User> currUser = userDao.get(username);
+    if (currUser.isEmpty()) {
       return UserMessage.USER_NOT_FOUND;
     }
-    // TODO: return the appropriate response here
-    return null;
+    user = currUser.get();
+    return UserMessage.SUCCESS;
   }
 
   public JSONObject getUserFields() {
