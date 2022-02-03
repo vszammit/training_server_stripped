@@ -1,5 +1,6 @@
 package User;
 
+import Config.Message;
 import Database.UserDao;
 import Logger.LogFactory;
 import User.Services.GetUserInfoService;
@@ -28,7 +29,9 @@ public class UserController {
         String username = req.getString("username");
         String password = req.getString("password");
         LoginService loginService = new LoginService(userDao, logger, username, password);
-        // implement the rest here
+        Message m = loginService.executeAndGetResponse();
+        ctx.sessionAttribute("username", username);
+        ctx.result(m.toResponseString());
       };
 
   public Handler logout =
@@ -43,7 +46,14 @@ public class UserController {
         logger.info("Started getUserInfo handler");
         String username = ctx.sessionAttribute("username");
         GetUserInfoService infoService = new GetUserInfoService(userDao, logger, username);
-        // implement the rest here
+        Message msg = infoService.executeAndGetResponse();
+        if (msg.equals(UserMessage.SUCCESS)) {
+            JSONObject res = infoService.getUserFields();
+            JSONObject msgJSON = msg.toJSON();
+            ctx.result(mergeJSON(res,msgJSON).toString());
+        } else {
+            ctx.result(msg.toJSON().toString());
+        }
       };
 
   // helper function to merge 2 json objects
