@@ -8,6 +8,7 @@ import User.User;
 import User.UserMessage;
 import Validation.ValidationUtils;
 import org.slf4j.Logger;
+import java.util.Optional;
 
 public class LoginService implements Service {
   private Logger logger;
@@ -24,13 +25,25 @@ public class LoginService implements Service {
   }
 
   public Message executeAndGetResponse() {
+    if (username.isEmpty() || password.isEmpty()) {
+      return UserMessage.INVALID_PARAMETER;
+    }
     if (!ValidationUtils.isValidUsername(this.username)
         || !ValidationUtils.isValidPassword(this.password)) {
       logger.info("Invalid username and/or password");
       return UserMessage.AUTH_FAILURE;
     }
     // TODO: see UserMessage for appropriate return types
-    return null;
+    Optional<User> currUser = userDao.get(username);
+    if (currUser.isEmpty()) {
+      return UserMessage.USER_NOT_FOUND;
+    }
+    String currPassword = currUser.get().getPassword();
+    if (!verifyPassword(password, currPassword)) {
+      return UserMessage.AUTH_FAILURE;
+    } else {
+      return UserMessage.AUTH_SUCCESS;
+    }
   }
 
   public boolean verifyPassword(String inputPassword, String userHash) {

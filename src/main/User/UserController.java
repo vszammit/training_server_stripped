@@ -8,6 +8,7 @@ import com.mongodb.client.MongoDatabase;
 import io.javalin.http.Handler;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import Config.Message;
 
 public class UserController {
   Logger logger;
@@ -28,8 +29,12 @@ public class UserController {
         String username = req.getString("username");
         String password = req.getString("password");
         LoginService loginService = new LoginService(userDao, logger, username, password);
-        // implement the rest here
-      };
+        Message verResponse = loginService.executeAndGetResponse();
+        if (verResponse == UserMessage.AUTH_SUCCESS) {
+            ctx.sessionAttribute("username", username);
+        }
+        ctx.result(verResponse.toResponseString());
+  };
 
   public Handler logout =
       ctx -> {
@@ -43,7 +48,14 @@ public class UserController {
         logger.info("Started getUserInfo handler");
         String username = ctx.sessionAttribute("username");
         GetUserInfoService infoService = new GetUserInfoService(userDao, logger, username);
-        // implement the rest here
+        Message verResponse = infoService.executeAndGetResponse();
+        if (verResponse == UserMessage.AUTH_SUCCESS) {
+            JSONObject user = infoService.getUserFields();
+            JSONObject merge = mergeJSON(verResponse.toJSON(), user);
+            ctx.result(merge.toString());
+        } else {
+            ctx.result(verResponse.toResponseString());
+        }
       };
 
   // helper function to merge 2 json objects
