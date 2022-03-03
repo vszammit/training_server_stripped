@@ -1,10 +1,13 @@
 package User;
 
+
+import Config.Message;
 import Database.UserDao;
 import Logger.LogFactory;
 import User.Services.GetUserInfoService;
 import User.Services.LoginService;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.util.JSON;
 import io.javalin.http.Handler;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -28,7 +31,11 @@ public class UserController {
         String username = req.getString("username");
         String password = req.getString("password");
         LoginService loginService = new LoginService(userDao, logger, username, password);
-        // implement the rest here
+        Message loginMessage = loginService.executeAndGetResponse();
+        if (loginMessage.equals(UserMessage.AUTH_SUCCESS)) {
+          ctx.sessionAttribute("username", username);
+        }
+        ctx.result(loginMessage.toResponseString());
       };
 
   public Handler logout =
@@ -43,6 +50,15 @@ public class UserController {
         logger.info("Started getUserInfo handler");
         String username = ctx.sessionAttribute("username");
         GetUserInfoService infoService = new GetUserInfoService(userDao, logger, username);
+        Message userInfoMessage = infoService.executeAndGetResponse();
+        if (userInfoMessage.equals(UserMessage.SUCCESS)){
+            JSONObject userJSON = infoService.getUserFields();
+            JSONObject messageJSON = userInfoMessage.toJSON();
+            String mergedJSONString = mergeJSON(userJSON, messageJSON).toString();
+            ctx.result(mergedJSONString);
+        } else{
+            ctx.result(userInfoMessage.toJSON().toString());
+        }
         // implement the rest here
       };
 

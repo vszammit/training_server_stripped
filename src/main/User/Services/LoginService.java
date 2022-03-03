@@ -29,8 +29,18 @@ public class LoginService implements Service {
       logger.info("Invalid username and/or password");
       return UserMessage.AUTH_FAILURE;
     }
-    // TODO: see UserMessage for appropriate return types
-    return null;
+
+    if (userDao.get(username).isEmpty()){
+      return UserMessage.USER_NOT_FOUND;
+    } else{
+      String currPassword = userDao.get(username).get().getPassword();
+      if (verifyPassword(password, currPassword)){
+        user = userDao.get(username).get();
+        return UserMessage.AUTH_SUCCESS;
+      } else{
+        return UserMessage.AUTH_FAILURE;
+      }
+    }
   }
 
   public boolean verifyPassword(String inputPassword, String userHash) {
